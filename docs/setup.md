@@ -1,4 +1,4 @@
-\# Local Setup
+# Local Setup
 
 
 
@@ -10,11 +10,11 @@ This guide describes the setup used during development.
 
 
 
-\---
 
 
 
-\## Requirements
+
+## Requirements
 
 
 
@@ -42,11 +42,11 @@ The project was developed locally with Docker Desktop on Windows.
 
 
 
-\---
 
 
 
-\## 1. Start Ollama
+
+## 1. Start Ollama
 
 
 
@@ -114,11 +114,9 @@ http://host.docker.internal:11434
 
 
 
-\---
 
 
-
-\## 2. Start n8n
+## 2. Start n8n
 
 
 
@@ -158,11 +156,9 @@ The n8n data directory is kept outside the GitHub repository so that local crede
 
 
 
-\---
 
 
-
-\## 3. Import the workflow
+## 3. Import the workflow
 
 
 
@@ -198,11 +194,8 @@ After importing it, check the nodes and make sure the required configuration is 
 
 
 
-\---
 
-
-
-\## 4. Workflow webhook
+## 4. Workflow webhook
 
 
 
@@ -230,7 +223,7 @@ The request body should contain:
 
 {
 
-&#x20; "city": "Paris"
+ "city": "Paris"
 
 }
 
@@ -254,11 +247,7 @@ The workflow should be activated before using the production webhook URL from th
 
 
 
-\---
-
-
-
-\## 5. Frontend
+## 5. Frontend
 
 
 
@@ -298,11 +287,9 @@ The frontend sends the selected city to the n8n webhook.
 
 
 
-\---
 
 
-
-\## 6. Frontend API configuration
+## 6. Frontend API configuration
 
 
 
@@ -326,11 +313,9 @@ If n8n is running on another machine or the workflow is deployed somewhere else,
 
 
 
-\---
 
 
-
-\## 7. CORS
+## 7. CORS
 
 
 
@@ -374,11 +359,9 @@ If the frontend is served from another port or domain, the CORS configuration ne
 
 
 
-\---
 
 
-
-\## 8. External APIs
+## 8. External APIs
 
 
 
@@ -432,11 +415,7 @@ These services are queried by the n8n workflow.
 
 
 
-\---
-
-
-
-\## 9. Test the workflow
+## 9. Test the workflow
 
 
 
@@ -444,7 +423,7 @@ There are two useful ways to test the workflow.
 
 
 
-\### Test inside n8n
+### Test inside n8n
 
 
 
@@ -464,7 +443,7 @@ The test request should contain:
 
 {
 
-&#x20; "city": "Berlin"
+ "city": "Berlin"
 
 }
 
@@ -480,7 +459,7 @@ Check the output of each major stage while debugging.
 
 
 
-\### Test from the frontend
+### Test from the frontend
 
 
 
@@ -524,7 +503,7 @@ The frontend should send:
 
 {
 
-&#x20; "city": "Paris"
+ "city": "Paris"
 
 }
 
@@ -552,51 +531,50 @@ A successful request should move through approximately these stages:
 
 Frontend
 
-&#x20;  ↓
+  ↓
 
 Webhook
 
-&#x20;  ↓
+  ↓
 
 Geocoding
 
-&#x20;  ↓
+  ↓
 
 Weather
 
-&#x20;  ↓
+  ↓
 
 Place search
 
-&#x20;  ↓
+  ↓
 
 Places DTO
 
-&#x20;  ↓
+  ↓
 
 Qwen place selection
 
-&#x20;  ↓
+  ↓
 
 Selected place validation
-
-&#x20;  ↓
+  ↓
 
 Qwen itinerary generation
 
-&#x20;  ↓
+  ↓
 
 Itinerary validation
 
-&#x20;  ↓
+  ↓
 
 Final Travel DTO
 
-&#x20;  ↓
+  ↓
 
 Webhook response
 
-&#x20;  ↓
+  ↓
 
 Frontend
 
@@ -608,11 +586,11 @@ Frontend
 
 
 
-\## 11. Troubleshooting
+## 11. Troubleshooting
 
 
 
-\### The frontend cannot connect to n8n
+### The frontend cannot connect to n8n
 
 
 
@@ -643,12 +621,7 @@ http://localhost:5678/webhook/travel-weather
 ```
 
 
-
-\---
-
-
-
-\### n8n receives the request but the city is missing
+### n8n receives the request but the city is missing
 
 
 
@@ -700,11 +673,9 @@ The latter is for a URL query parameter such as:
 
 
 
-\---
 
 
-
-\### The test webhook returns 404
+### The test webhook returns 404
 
 
 
@@ -732,11 +703,9 @@ The test webhook is temporary and is different from the production webhook.
 
 
 
-\---
 
 
-
-\### Ollama errors
+### Ollama errors
 
 
 
@@ -780,11 +749,9 @@ ollama pull qwen3.5:4b
 
 
 
-\---
 
 
-
-\### Itinerary validation fails
+### Itinerary validation fails
 
 
 
@@ -816,11 +783,10 @@ Because the project uses a relatively small local model, occasional invalid gene
 
 
 
-\---
 
 
 
-\### Some cities work while others fail
+### Some cities work while others fail
 
 
 
@@ -852,11 +818,11 @@ This is one of the current limitations of the prototype.
 
 
 
-\---
 
 
 
-\## 12. Keeping secrets out of Git
+
+## 12. Keeping secrets out of Git
 
 
 
@@ -888,11 +854,10 @@ The local n8n instance stores its own data separately from this repository.
 
 
 
-\---
 
 
 
-\## 13. Repository structure
+## 13. Repository structure
 
 
 
@@ -948,11 +913,8 @@ voyage-ai-travel-planner/
 
 
 
-\---
 
-
-
-\## 14. Notes
+## 14. Notes
 
 
 
