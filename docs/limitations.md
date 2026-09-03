@@ -1,4 +1,4 @@
-\# Current Limitations
+## Current Limitations
 
 
 
@@ -6,7 +6,7 @@ Voyage is currently a local prototype, so there are a few known limitations.
 
 
 
-\## Weather
+## Weather
 
 
 
@@ -14,7 +14,7 @@ The workflow uses current weather data. It does not currently build the itinerar
 
 
 
-\## Opening hours
+## Opening hours
 
 
 
@@ -22,7 +22,7 @@ Opening hours may be available from OpenStreetMap, but the current itinerary gen
 
 
 
-\## Travel time
+## Travel time
 
 
 
@@ -30,7 +30,7 @@ The itinerary uses the coordinates of places when planning, but it does not curr
 
 
 
-\## Place data
+## Place data
 
 
 
@@ -38,7 +38,7 @@ Place availability and metadata depend on OpenStreetMap coverage. Some places ma
 
 
 
-\## LLM reliability
+## LLM reliability
 
 
 
@@ -46,7 +46,7 @@ The local Qwen model can occasionally generate invalid or incomplete itinerary d
 
 
 
-\## Local deployment
+## Local deployment
 
 
 
