@@ -1,4 +1,4 @@
-\# Voyage — AI Travel Planner
+# Voyage — AI Travel Planner
 
 
 
@@ -10,7 +10,7 @@ I built this project while learning how to connect APIs, n8n workflows, structur
 
 
 
-\## What it does
+## What it does
 
 
 
@@ -22,25 +22,25 @@ The workflow then:
 
 
 
-1\. Resolves the city and gets its coordinates, country and timezone.
+1. Resolves the city and gets its coordinates, country and timezone.
 
-2\. Gets the current weather for the location.
+2. Gets the current weather for the location.
 
-3\. Finds nearby places using OpenStreetMap data through the Overpass API.
+3. Finds nearby places using OpenStreetMap data through the Overpass API.
 
-4\. Converts the API response into a simpler places structure.
+4. Converts the API response into a simpler places structure.
 
-5\. Sends the available places and weather information to a local Qwen model.
+5. Sends the available places and weather information to a local Qwen model.
 
-6\. Validates the places selected by the model against the original place data.
+6. Validates the places selected by the model against the original place data.
 
-7\. Sends only the validated places to a second Qwen step to build the itinerary.
+7. Sends only the validated places to a second Qwen step to build the itinerary.
 
-8\. Validates the generated itinerary for invalid or repeated places.
+8. Validates the generated itinerary for invalid or repeated places.
 
-9\. Maps the final place IDs back to their original place information.
+9. Maps the final place IDs back to their original place information.
 
-10\. Returns a structured travel response to the frontend.
+10. Returns a structured travel response to the frontend.
 
 
 
@@ -48,149 +48,147 @@ The frontend then displays the generated itinerary together with the weather inf
 
 
 
-\---
 
 
 
-\## Architecture
+## Architecture
 
 
 
 ```text
 
-&#x20;                        ┌─────────────────┐
+                      ┌─────────────────┐
 
-&#x20;                        │    Frontend     │
+                       │    Frontend     │
 
-&#x20;                        │  HTML / CSS / JS│
+                      │  HTML / CSS / JS│
 
-&#x20;                        └────────┬────────┘
+                      └────────┬────────┘
 
-&#x20;                                 │
+                                │
 
-&#x20;                            POST { city }
+                            POST { city }
 
-&#x20;                                 │
+                                 │
 
-&#x20;                                 ▼
+                                 ▼
 
-&#x20;                        ┌─────────────────┐
+                        ┌─────────────────┐
 
-&#x20;                        │   n8n Webhook   │
+                       │   n8n Webhook   │
 
-&#x20;                        └────────┬────────┘
+                        └────────┬────────┘
 
-&#x20;                                 │
+                                 │
 
-&#x20;                   ┌─────────────┴─────────────┐
+                   ┌─────────────┴─────────────┐
 
-&#x20;                   │                           │
+                   │                           │
 
-&#x20;                   ▼                           ▼
+                   ▼                           ▼
 
-&#x20;            ┌──────────────┐           ┌───────────────┐
+            ┌──────────────┐           ┌───────────────┐
 
-&#x20;            │  Geocoding   │           │    Places     │
+            │  Geocoding   │           │    Places     │
 
-&#x20;            │  Open-Meteo  │           │ Overpass API  │
+            │  Open-Meteo  │           │ Overpass API  │
 
-&#x20;            └──────┬───────┘           └───────┬───────┘
+            └──────┬───────┘           └───────┬───────┘
 
-&#x20;                   │                           │
+                   │                           │
 
-&#x20;                   ▼                           ▼
+                   ▼                           ▼
 
-&#x20;            ┌──────────────┐           ┌───────────────┐
+            ┌──────────────┐           ┌───────────────┐
 
-&#x20;            │  Weather DTO │           │   Places DTO  │
+            │  Weather DTO │           │   Places DTO  │
 
-&#x20;            └──────┬───────┘           └───────┬───────┘
+            └──────┬───────┘           └───────┬───────┘
 
-&#x20;                   │                           │
+                   │                           │
 
-&#x20;                   └─────────────┬─────────────┘
+                   └─────────────┬─────────────┘
 
-&#x20;                                 │
+                                 │
 
-&#x20;                                 ▼
+                                 ▼
 
-&#x20;                        ┌─────────────────┐
+                        ┌─────────────────┐
 
-&#x20;                        │  Qwen / Ollama  │
+                        │  Qwen / Ollama  │
 
-&#x20;                        │ Place Selection │
+                        │ Place Selection │
 
-&#x20;                        └────────┬────────┘
+                        └────────┬────────┘
 
-&#x20;                                 │
+                                 │
 
-&#x20;                                 ▼
+                                 ▼
 
-&#x20;                        ┌─────────────────┐
+                        ┌─────────────────┐
 
-&#x20;                        │ Validate Places │
+                        │ Validate Places │
 
-&#x20;                        └────────┬────────┘
+                        └────────┬────────┘
 
-&#x20;                                 │
+                                 │
 
-&#x20;                                 ▼
+                                 ▼
 
-&#x20;                        ┌─────────────────┐
+                        ┌─────────────────┐
 
-&#x20;                        │  Qwen / Ollama  │
+                        │  Qwen / Ollama  │
 
-&#x20;                        │ Itinerary Plan  │
+                        │ Itinerary Plan  │
 
-&#x20;                        └────────┬────────┘
+                        └────────┬────────┘
 
-&#x20;                                 │
+                                 │
 
-&#x20;                                 ▼
+                                 ▼
 
-&#x20;                        ┌─────────────────┐
+                        ┌─────────────────┐
 
-&#x20;                        │    Validate     │
+                        │    Validate     │
 
-&#x20;                        │    Itinerary    │
+                        │    Itinerary    │
 
-&#x20;                        └────────┬────────┘
+                        └────────┬────────┘
 
-&#x20;                                 │
+                                 │
 
-&#x20;                                 ▼
+                                 ▼
 
-&#x20;                        ┌─────────────────┐
+                        ┌─────────────────┐
 
-&#x20;                        │ Final Travel DTO│
+                        │ Final Travel DTO│
 
-&#x20;                        └────────┬────────┘
+                        └────────┬────────┘
 
-&#x20;                                 │
+                                 │
 
-&#x20;                                 ▼
+                                 ▼
 
-&#x20;                        ┌─────────────────┐
+                        ┌─────────────────┐
 
-&#x20;                        │    Frontend     │
+                        │    Frontend     │
 
-&#x20;                        │  Render Result  │
+                        │  Render Result  │
 
-&#x20;                        └─────────────────┘
+                        └─────────────────┘
 
 ```
 
 
 
-\---
 
 
 
-\## Tech stack
+## Tech stack
 
 
 
-\### Frontend
+### Frontend
 
 
 
@@ -202,7 +200,7 @@ The frontend then displays the generated itinerary together with the weather inf
 
 
 
-\### Automation
+### Automation
 
 
 
@@ -212,7 +210,7 @@ The frontend then displays the generated itinerary together with the weather inf
 
 
 
-\### AI
+### AI
 
 
 
@@ -222,7 +220,7 @@ The frontend then displays the generated itinerary together with the weather inf
 
 
 
-\### APIs and data
+### APIs and data
 
 
 
@@ -236,7 +234,7 @@ The frontend then displays the generated itinerary together with the weather inf
 
 
 
-\### Other
+### Other
 
 
 
@@ -250,11 +248,11 @@ The frontend then displays the generated itinerary together with the weather inf
 
 
 
-\## How the workflow works
+## How the workflow works
 
 
 
-\### 1. Webhook
+### 1. Webhook
 
 
 
@@ -270,7 +268,7 @@ Example:
 
 {
 
-&#x20; "city": "Paris"
+ "city": "Paris"
 
 }
 
@@ -290,11 +288,11 @@ $json.body.city
 
 
 
-\---
 
 
 
-\### 2. City geocoding
+
+### 2. City geocoding
 
 
 
@@ -322,11 +320,10 @@ This gives the rest of the workflow a consistent location to work with.
 
 
 
-\---
 
 
 
-\### 3. Weather
+### 3. Weather
 
 
 
@@ -350,11 +347,10 @@ The raw API response is converted into a smaller weather object before being pas
 
 
 
-\---
 
 
 
-\### 4. Place discovery
+### 4. Place discovery
 
 
 
@@ -396,19 +392,19 @@ Each place can contain:
 
 {
 
-&#x20; "id": "place\_123",
+ "id": "place\_123",
 
-&#x20; "name": "Example Museum",
+ "name": "Example Museum",
 
-&#x20; "category": "museum",
+ "category": "museum",
 
-&#x20; "latitude": 48.123,
+ "latitude": 48.123,
 
-&#x20; "longitude": 2.456,
+ "longitude": 2.456,
 
-&#x20; "openingHours": null,
+ "openingHours": null,
 
-&#x20; "website": null
+ "website": null
 
 }
 
@@ -416,11 +412,9 @@ Each place can contain:
 
 
 
-\---
 
 
-
-\### 5. Place selection with Qwen
+### 5. Place selection with Qwen
 
 
 
@@ -440,11 +434,9 @@ This is important because the model should choose from real places returned by t
 
 
 
-\---
 
 
-
-\### 6. Selected place validation
+### 6. Selected place validation
 
 
 
@@ -464,11 +456,9 @@ This creates a boundary between the model's output and the data that the rest of
 
 
 
-\---
 
 
-
-\### 7. Itinerary generation
+### 7. Itinerary generation
 
 
 
@@ -498,11 +488,9 @@ The model is instructed not to invent places or repeat the same place.
 
 
 
-\---
 
 
-
-\### 8. Itinerary validation
+### 8. Itinerary validation
 
 
 
@@ -532,11 +520,9 @@ The important idea here is that the LLM output is not treated as automatically c
 
 
 
-\---
 
 
-
-\### 9. Final Travel DTO
+### 9. Final Travel DTO
 
 
 
@@ -592,63 +578,62 @@ A simplified version of the response sent to the frontend looks like:
 
 {
 
-&#x20; "success": true,
+ "success": true,
 
-&#x20; "destination": {
+ "destination": {
 
-&#x20;   "city": "Berlin",
+   "city": "Berlin",
 
-&#x20;   "country": "Germany",
+   "country": "Germany",
 
-&#x20;   "timezone": "Europe/Berlin"
+   "timezone": "Europe/Berlin"
 
-&#x20; },
+ },
 
-&#x20; "weather": {
+ "weather": {
 
-&#x20;   "temperature": 19.4,
+   "temperature": 19.4,
 
-&#x20;   "humidity": 77,
+   "humidity": 77,
 
-&#x20;   "windSpeed": 9
+   "windSpeed": 9
+ },
 
-&#x20; },
+ "itinerary": {
 
-&#x20; "itinerary": {
+   "destination": "Berlin, Germany",
 
-&#x20;   "destination": "Berlin, Germany",
+   "summary": "A two-day itinerary focusing on history and art.",
 
-&#x20;   "summary": "A two-day itinerary focusing on history and art.",
+   "days": \[
 
-&#x20;   "days": \[
+    {
 
-&#x20;     {
+       "day": 1,
 
-&#x20;       "day": 1,
+       "activities": \[
 
-&#x20;       "activities": \[
+        {
 
-&#x20;         {
+           "time": "Morning",
 
-&#x20;           "time": "Morning",
+           "placeId": "place\_7574",
 
-&#x20;           "placeId": "place\_7574",
+           "name": "Example Place",
 
-&#x20;           "name": "Example Place",
+           "category": "memorial",
 
-&#x20;           "category": "memorial",
+           "reason": "..."
 
-&#x20;           "reason": "..."
+        }
 
-&#x20;         }
+       ]
 
-&#x20;       ]
+     }
 
-&#x20;     }
+   ]
 
-&#x20;   ]
-
-&#x20; }
+ }
 
 }
 
@@ -660,11 +645,11 @@ The actual number and type of places depend on the data returned for the request
 
 
 
-\---
 
 
 
-\## Why the workflow uses validation
+
+## Why the workflow uses validation
 
 
 
@@ -702,27 +687,27 @@ The basic flow is:
 
 Real API data
 
-&#x20;     ↓
+     ↓
 
 LLM selection
 
-&#x20;     ↓
+     ↓
 
 Validation
 
-&#x20;     ↓
+    ↓
 
 Validated data
 
-&#x20;     ↓
+    ↓
 
 LLM itinerary
 
-&#x20;     ↓
+    ↓
 
 Validation
 
-&#x20;     ↓
+    ↓
 
 Final response
 
@@ -734,11 +719,11 @@ This was one of the main design decisions in the project.
 
 
 
-\---
 
 
 
-\## Why Qwen runs locally
+
+## Why Qwen runs locally
 
 
 
@@ -762,11 +747,10 @@ http://host.docker.internal:11434
 
 
 
-\---
 
 
 
-\## Running the project locally
+## Running the project locally
 
 
 
@@ -782,15 +766,15 @@ The main components are:
 
 Browser
 
-&#x20;  ↓
+  ↓
 
 Frontend local server
 
-&#x20;  ↓
+  ↓
 
 n8n running in Docker
 
-&#x20;  ↓
+  ↓
 
 External APIs + local Ollama
 
@@ -802,11 +786,11 @@ See \[docs/setup.md](docs/setup.md) for the setup process.
 
 
 
-\---
 
 
 
-\## Project structure
+
+## Project structure
 
 
 
@@ -874,11 +858,11 @@ voyage-ai-travel-planner/
 
 
 
-\## Screenshots
+## Screenshots
 
 
 
-\### Home
+### Home
 
 
 
@@ -886,7 +870,7 @@ voyage-ai-travel-planner/
 
 
 
-\### Building an itinerary
+### Building an itinerary
 
 
 
@@ -894,7 +878,7 @@ voyage-ai-travel-planner/
 
 
 
-\### Generated itinerary
+### Generated itinerary
 
 
 
@@ -902,11 +886,11 @@ voyage-ai-travel-planner/
 
 
 
-\---
 
 
 
-\## Current limitations
+
+## Current limitations
 
 
 
@@ -942,7 +926,7 @@ More details are in \[docs/limitations.md](docs/limitations.md).
 
 
 
-\## What I learned
+## What I learned
 
 
 
@@ -992,7 +976,7 @@ Some of the concepts I worked with were:
 
 
 
-\## Future improvements
+## Future improvements
 
 
 
@@ -1016,11 +1000,11 @@ Some things I would like to explore in future versions:
 
 
 
-\---
 
 
 
-\## Status
+
+## Status
 
 
 
