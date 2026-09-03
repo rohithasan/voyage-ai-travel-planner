@@ -1,0 +1,906 @@
+/* ============================================================
+   DESIGN TOKENS
+   Palette: "midnight departures" — deep dusk-blue base, a
+   departure-board amber accent, and a cool teal for data readouts.
+   Carried over from the earlier version so the product keeps a
+   consistent visual identity as it grows.
+   ============================================================ */
+:root {
+  --bg-deep:     #0a0f1c;
+  --bg-panel:    #121a2b;
+  --bg-panel-2:  #0f1626;
+  --line:        #263149;
+  --line-soft:   #1b2438;
+
+  --text-primary: #edeff5;
+  --text-muted:   #8a93ac;
+  --text-faint:   #565f78;
+
+  --accent-amber:  #f2a649;
+  --accent-teal:   #45d6c0;
+  --accent-red:    #e8636a;
+  --accent-violet: #b3a6f0;
+  --accent-sage:   #8fd0a5;
+  --accent-rose:   #f2909f;
+  --accent-slate:  #9aa6c4;
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body:    "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:    "IBM Plex Mono", "Courier New", monospace;
+
+  --radius-lg: 22px;
+  --radius-sm: 10px;
+
+  --shadow-panel: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Guarantees any element with the `hidden` attribute is truly hidden.
+   Without this, a component's own `display: flex/grid/...` rule has the
+   SAME CSS specificity as the `[hidden]` attribute selector, and since
+   author styles are applied after the browser's default UA stylesheet,
+   the component's display rule can win the cascade — leaving a panel
+   visible even though JS set `.hidden = true` on it. This was the root
+   cause of the loading/error card staying visible under the results. */
+[hidden] {
+  display: none !important;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   AMBIENT SKY BACKDROP
+   ============================================================ */
+.sky {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.sky__glow {
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  width: 1100px;
+  height: 1100px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(242, 166, 73, 0.10) 0%, rgba(69, 214, 192, 0.06) 40%, transparent 70%);
+  filter: blur(10px);
+}
+
+.sky__horizon {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 45%;
+  background: linear-gradient(to top, rgba(69, 214, 192, 0.05), transparent);
+}
+
+/* ============================================================
+   TOP BAR
+   ============================================================ */
+.topbar {
+  position: relative;
+  z-index: 1;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 20px 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.topbar__brand {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar__logo {
+  color: var(--accent-amber);
+}
+
+.topbar__tagline {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+
+/* ============================================================
+   HERO / SEARCH
+   ============================================================ */
+.hero {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 52px 20px 8px;
+  text-align: center;
+}
+
+.hero__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(28px, 5vw, 42px);
+  line-height: 1.15;
+  margin: 0 0 26px;
+  letter-spacing: -0.01em;
+}
+
+.hero__search {
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+.field-row {
+  display: flex;
+  gap: 10px;
+}
+
+.field-input {
+  flex: 1;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  padding: 14px 16px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field-input::placeholder {
+  color: var(--text-faint);
+}
+
+.field-input:focus {
+  border-color: var(--accent-teal);
+  box-shadow: 0 0 0 3px rgba(69, 214, 192, 0.15);
+}
+
+.field-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent-amber);
+  color: #23150a;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  padding: 0 20px;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+
+.field-btn:hover {
+  background: #f5b568;
+}
+
+.field-btn:active {
+  transform: scale(0.97);
+}
+
+.field-btn:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
+.field-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.field-error {
+  margin: 12px 2px 0;
+  font-size: 13px;
+  color: var(--accent-red);
+  text-align: left;
+}
+
+.hint {
+  margin: 12px 2px 0;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+.hint kbd {
+  font-family: var(--font-mono);
+  background: var(--bg-panel-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   OUTPUT WRAPPER (loading / error / results share this space)
+   ============================================================ */
+.output {
+  position: relative;
+  z-index: 1;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 20px 64px;
+}
+
+/* --- Idle card (shown before the first search) --- */
+.idle-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+  padding: 48px 24px;
+  max-width: 480px;
+  margin: 40px auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+
+.idle-card__icon {
+  color: var(--accent-teal);
+  margin-bottom: 6px;
+  animation: idle-spin 16s linear infinite;
+}
+
+@keyframes idle-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.idle-card__title {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.idle-card__subtitle {
+  margin: 0 0 18px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.idle-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.chip {
+  background: var(--bg-panel-2);
+  border: 1px solid var(--line);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.chip:hover {
+  border-color: var(--accent-teal);
+  color: var(--accent-teal);
+}
+
+.chip:active {
+  transform: scale(0.96);
+}
+
+/* --- Loading card --- */
+.loading-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+  padding: 48px 24px;
+  max-width: 480px;
+  margin: 40px auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+}
+
+.loading-card__title {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.loading-steps {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.loading-steps li {
+  font-size: 13px;
+  color: var(--text-muted);
+  opacity: 0.35;
+  animation: step-pulse 3.6s ease-in-out infinite;
+}
+
+.loading-steps li:nth-child(1) { animation-delay: 0s; }
+.loading-steps li:nth-child(2) { animation-delay: 1.2s; }
+.loading-steps li:nth-child(3) { animation-delay: 2.4s; }
+
+@keyframes step-pulse {
+  0%, 100% { opacity: 0.35; }
+  30% { opacity: 1; }
+}
+
+/* Loading spinner: a slowly spinning compass needle */
+.compass {
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid var(--line);
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.compass__needle {
+  width: 2px;
+  height: 18px;
+  background: linear-gradient(to bottom, var(--accent-amber), var(--accent-teal));
+  border-radius: 2px;
+  animation: spin 1.4s linear infinite;
+  transform-origin: center 22px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* --- Error card --- */
+.error-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+  padding: 44px 24px;
+  max-width: 480px;
+  margin: 40px auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  color: var(--accent-red);
+}
+
+.error-card__title {
+  margin: 6px 0 0;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.error-card__message {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+  max-width: 380px;
+}
+
+.error-card__retry {
+  margin-top: 12px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-primary);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.error-card__retry:hover {
+  border-color: var(--accent-teal);
+  color: var(--accent-teal);
+}
+
+/* ============================================================
+   RESULTS
+   ============================================================ */
+.results {
+  animation: fade-up 0.4s ease both;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.destination-header {
+  margin-bottom: 26px;
+}
+
+.destination-header__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(26px, 4vw, 36px);
+  margin: 0 0 10px;
+}
+
+.destination-header__summary {
+  margin: 0;
+  max-width: 680px;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* Two-column layout: itinerary (wide) + weather (narrow). On mobile,
+   this collapses to a single column ordered weather, then itinerary
+   (the destination header above is always first). */
+.results-grid {
+  display: grid;
+  gap: 26px;
+  grid-template-columns: 1.7fr 1fr;
+  grid-template-areas: "itinerary weather";
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .results-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "weather"
+      "itinerary";
+  }
+}
+
+.itinerary-panel,
+.weather-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+}
+
+.itinerary-panel {
+  grid-area: itinerary;
+  padding: 30px;
+  min-width: 0; /* prevents long place names from overflowing the grid */
+}
+
+.weather-panel {
+  grid-area: weather;
+  padding: 26px;
+}
+
+@media (min-width: 901px) {
+  .weather-panel {
+    position: sticky;
+    top: 24px;
+  }
+}
+
+.panel-divider {
+  border-top: 1px dashed var(--line-soft);
+  margin: 20px 0;
+}
+
+/* --- Weather panel contents --- */
+.weather-panel__temp-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.weather-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.weather-panel__temp-value {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 500;
+  color: var(--accent-amber);
+}
+
+.weather-panel__temp-unit {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--accent-amber);
+}
+
+.detail-grid {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+}
+
+.detail-grid--2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.detail dt {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 6px;
+}
+
+.detail dd {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.time-block {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.time-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.time-row__label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.time-row__value {
+  font-family: var(--font-mono);
+  font-size: 14.5px;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.time-row--city .time-row__value {
+  color: var(--accent-teal);
+  font-weight: 600;
+}
+
+/* --- Itinerary panel contents --- */
+.day-block {
+  margin-bottom: 34px;
+}
+
+.day-block:last-child {
+  margin-bottom: 0;
+}
+
+.day-block__heading {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-amber);
+  margin: 0 0 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--line-soft);
+}
+
+.itinerary-empty {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 16px;
+  position: relative;
+  padding-bottom: 28px;
+  animation: fade-up 0.4s ease both;
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-item__node {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-teal);
+  margin-top: 6px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.timeline-item__node::after {
+  content: "";
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1.5px;
+  bottom: -28px;
+  background: var(--line-soft);
+}
+
+.timeline-item:last-child .timeline-item__node::after {
+  display: none;
+}
+
+.timeline-item__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.timeline-item__time {
+  margin: 0 0 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.timeline-item__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.timeline-item__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.timeline-item__reason {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.timeline-item__link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-amber);
+  text-decoration: none;
+}
+
+.timeline-item__link:hover {
+  text-decoration: underline;
+}
+
+/* --- Category badges --- */
+.badge {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+
+.badge--teal   { color: var(--accent-teal);   background: rgba(69, 214, 192, 0.08); }
+.badge--amber  { color: var(--accent-amber);  background: rgba(242, 166, 73, 0.08); }
+.badge--violet { color: var(--accent-violet); background: rgba(179, 166, 240, 0.08); }
+.badge--sage   { color: var(--accent-sage);   background: rgba(143, 208, 165, 0.08); }
+.badge--rose   { color: var(--accent-rose);   background: rgba(242, 144, 159, 0.08); }
+.badge--slate  { color: var(--accent-slate);  background: rgba(154, 166, 196, 0.08); }
+
+/* ============================================================
+   ANIMATED WEATHER ICONS (sun / cloud / snow)
+   ============================================================ */
+.weather-icon svg {
+  overflow: visible;
+}
+
+.weather-icon .sun-core {
+  fill: var(--accent-amber);
+}
+
+.weather-icon .sun-rays {
+  stroke: var(--accent-amber);
+  transform-origin: center;
+  animation: icon-spin 9s linear infinite;
+}
+
+.weather-icon .cloud-body {
+  fill: var(--text-muted);
+}
+
+.weather-icon .cloud-drift {
+  animation: icon-drift var(--drift-duration, 3.2s) ease-in-out infinite alternate;
+}
+
+.weather-icon .snow-dot {
+  fill: var(--accent-teal);
+  animation: icon-fall 2.4s ease-in-out infinite;
+}
+
+.weather-icon .snow-dot:nth-child(2) { animation-delay: 0.4s; }
+.weather-icon .snow-dot:nth-child(3) { animation-delay: 0.8s; }
+
+.weather-icon .moon-body {
+  fill: var(--text-primary);
+  opacity: 0.9;
+}
+
+.weather-icon .moon-glow {
+  animation: icon-glow 3.6s ease-in-out infinite;
+}
+
+.weather-icon .star-dot {
+  fill: var(--text-primary);
+  animation: icon-twinkle 2.2s ease-in-out infinite;
+}
+
+.weather-icon .star-dot:nth-child(2) { animation-delay: 0.7s; }
+
+.weather-icon .rain-drop {
+  stroke: var(--accent-teal);
+  animation: icon-rain 1s linear infinite;
+}
+
+.weather-icon .rain-drop:nth-child(2) { animation-delay: 0.25s; }
+.weather-icon .rain-drop:nth-child(3) { animation-delay: 0.5s; }
+
+@keyframes icon-glow {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+
+@keyframes icon-twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes icon-rain {
+  0%   { transform: translateY(-3px); opacity: 0; }
+  30%  { opacity: 1; }
+  100% { transform: translateY(4px); opacity: 0; }
+}
+
+@keyframes icon-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes icon-drift {
+  from { transform: translateX(-2px); }
+  to   { transform: translateX(2px); }
+}
+
+@keyframes icon-fall {
+  0%   { transform: translateY(-2px); opacity: 0.5; }
+  50%  { transform: translateY(2px); opacity: 1; }
+  100% { transform: translateY(-2px); opacity: 0.5; }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 560px) {
+  .hero {
+    padding: 40px 16px 6px;
+  }
+
+  .field-row {
+    flex-direction: column;
+  }
+
+  .field-btn {
+    padding: 14px 20px;
+    justify-content: center;
+  }
+
+  .itinerary-panel,
+  .weather-panel {
+    padding: 22px;
+  }
+
+  .loading-card,
+  .error-card {
+    padding: 36px 20px;
+  }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .compass__needle,
+  .sun-rays,
+  .cloud-drift,
+  .snow-dot,
+  .moon-glow,
+  .star-dot,
+  .rain-drop,
+  .idle-card__icon,
+  .loading-steps li {
+    animation: none;
+  }
+  .field-btn,
+  .error-card__retry {
+    transition: none;
+  }
+  .results,
+  .timeline-item {
+    animation: none;
+  }
+}

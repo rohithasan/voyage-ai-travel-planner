@@ -1,0 +1,601 @@
+{
+  "name": "AI Travel Planner v1",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://geocoding-api.open-meteo.com/v1/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.body.city }}"
+            },
+            {
+              "name": "count",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        448,
+        0
+      ],
+      "id": "b5fce373-5824-4c52-b351-b1a54bc436b5",
+      "name": "HTTP Request - geocoding"
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "={{ $json.places[0].latitude }}"
+            },
+            {
+              "name": "longitude",
+              "value": "={{ $json.places[0].longitude }}"
+            },
+            {
+              "name": "current",
+              "value": "temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1296,
+        0
+      ],
+      "id": "64ff3ba9-278c-4070-9237-976323308eb2",
+      "name": "Weather API"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "travel-weather",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "http://localhost:5501"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "70d9ef9b-f2fd-46a5-922e-d2538f9d0daf",
+      "name": "Webhook",
+      "webhookId": "15e7ffb9-a314-4619-a5d1-33d3bab5f03c"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6f9d3111-bda7-4335-931b-f5b0abc915b2",
+              "name": "success",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "bd21f8d9-57de-44cb-966d-f4b60c888e11",
+              "name": "city",
+              "value": "={{ $('HTTP Request - geocoding').item.json.results[0].name }}",
+              "type": "string"
+            },
+            {
+              "id": "505b1881-64f4-4bd1-93eb-b71b84d9e747",
+              "name": "country",
+              "value": "={{ $('HTTP Request - geocoding').item.json.results[0].country }}",
+              "type": "string"
+            },
+            {
+              "id": "7f634575-d12e-40d9-aa1a-803c8ed6c616",
+              "name": "timezone",
+              "value": "={{ $('HTTP Request - geocoding').item.json.results[0].timezone }}",
+              "type": "string"
+            },
+            {
+              "id": "8bb85434-5a10-49bd-833b-5c997e8be592",
+              "name": "temperature",
+              "value": "={{ $json.current.temperature_2m }}",
+              "type": "number"
+            },
+            {
+              "id": "f0978678-d1bd-46cd-94fb-663cd022b54f",
+              "name": "humidity",
+              "value": "={{ $json.current.relative_humidity_2m }}",
+              "type": "number"
+            },
+            {
+              "id": "690f20e5-cdaa-40e8-86cc-b15056868d58",
+              "name": "windSpeed",
+              "value": "={{ $json.current.wind_speed_10m }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1520,
+        0
+      ],
+      "id": "8a576687-4fbb-4375-917b-c7d92b27a178",
+      "name": "Travel Weather DTO"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "http://localhost:5501"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2976,
+        16
+      ],
+      "id": "48f8779f-1c82-431c-8962-9e6c8dcba591",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1b57fe9c-dad3-46a7-a00e-16d143b780d7",
+              "leftValue": "={{ $json.body.city }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "9d8e3e37-20dc-4861-904b-7db3af616846",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"City query parameter is required.\"\n}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "http://localhost:5501"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        320,
+        240
+      ],
+      "id": "cf890ac7-c7d1-48b5-b5f4-e08a0aeb55fd",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "31c5da73-6368-4dd4-96e6-a2699509b38b",
+              "leftValue": "={{ $('HTTP Request - geocoding').item.json.results[0].name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1072,
+        0
+      ],
+      "id": "935a2043-ea9d-45d2-ab6d-aa6c6a99b044",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"City not found.\"\n}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "http://localhost:5501"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1232,
+        224
+      ],
+      "id": "eee419f7-c8de-41e9-a8ca-2180fdef8d3e",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11434/api/chat",
+        "sendBody": true,
+        "specifyBody": "=json",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "jsonBody": "={{ JSON.stringify({\n  model: \"qwen3.5:4b\",\n  messages: [\n    {\n      role: \"user\",\n      content: `You are a travel planning assistant.\n\nDestination: ${$json.city}, ${$json.country}\n\nCurrent weather:\nTemperature:  ${$('Travel Weather DTO').item.json.temperature }°C\nHumidity: ${$('Travel Weather DTO').item.json.humidity}%\nWind speed: ${$('Travel Weather DTO').item.json.windSpeed} m/s\n\nHere is a list of real places found near the destination:\n\n${JSON.stringify($('Lightweight LLM DTO').item.json.places)}\n\nSelect between 4 and 6 suitable places from this list. Do not invent or add places to reach a target number for a tourist visiting ${$json.city}.\n\n\nse the provided weather values when making your selection.\n\nDo not say weather information is undefined.\n\nOnly select places from the provided list.\n\nEach place has a unique ID.\n\nSelect places ONLY from the provided list.\n\nReturn the exact place ID provided in the list.\n\nDo not invent or modify place IDs.\n\nDo not create new IDs.\n\nDo not select a place that is not in the provided list.\n\nSelect 4-6 places.\n\nPrefer a balanced mix of experiences.\n\nAvoid selecting too many places of the same category.\nThe provided place list is the complete universe of available places.\nDo not use your prior knowledge of the city to add places.\n\nImportant rules:\n1. ONLY select places that appear in the provided list.\n2. Do not invent or rename places.\n3. Consider the current weather when selecting them.\n4. Prefer varied experiences such as landmarks, museums, parks, viewpoints and attractions.\n5. Do not select multiple places that are essentially the same type of experience.\n6. Keep the reason short. Base the reason only on the provided weather and the known place category. Do not invent physical features, shelter, facilities, opening hours, or other facts about a place that were not provided..\n7. Do not include places simply because they are famous.`\n    }\n  ],\nformat: {\n  type: \"object\",\n  properties: {\n    selectedPlaces: {\n      type: \"array\",\n      minItems: 4,\n      maxItems: 6,\n      items: {\n        type: \"object\",\n        properties: {\n          placeId: {\n            type: \"string\"\n          },\n          reason: {\n            type: \"string\"\n          }\n        },\n        required: [\n          \"placeId\",\n          \"reason\"\n        ]\n      }\n    }\n  },\n  required: [\n    \"selectedPlaces\"\n  ]\n},\n  think: false,\n  stream: false\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1936,
+        0
+      ],
+      "id": "71a4ab64-9159-4f10-9e0d-a369204a1e2b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://overpass-api.de/api/interpreter",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "data",
+              "value": "=[out:json][timeout:25]; (   node[\"tourism\"=\"attraction\"](around:10000,{{ $json.results[0].latitude }},{{ $json.results[0].longitude }});   node[\"tourism\"=\"museum\"](around:10000,{{ $json.results[0].latitude }},{{ $json.results[0].longitude }});   node[\"tourism\"=\"gallery\"](around:10000,{{ $json.results[0].latitude }},{{ $json.results[0].longitude }});   node[\"tourism\"=\"zoo\"](around:10000,{{ $json.results[0].latitude }},{{ $json.results[0].longitude }});   node[\"tourism\"=\"theme_park\"](around:10000,{{ $json.results[0].latitude }},{{ $json.results[0].longitude }});   node[\"historic\"](around:10000,{{ $json.results[0].latitude }},{{ $json.results[0].longitude }});   node[\"leisure\"=\"park\"](around:10000,{{ $json.results[0].latitude }},{{ $json.results[0].longitude }}); ); out center;"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        656,
+        0
+      ],
+      "id": "996bd41e-88f7-48e7-a222-89b1d280c1fe",
+      "name": "HTTP Request1",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "const elements = $json.elements || [];\n\nconst places = elements\n  .filter(place => place.tags?.name)\n  .map((place, index) => ({\n    id: `place_${String(index + 1).padStart(3, \"0\")}`,\n    name: place.tags.name,\n    category:\n      place.tags.tourism ||\n      place.tags.historic ||\n      place.tags.leisure ||\n      \"place\",\n    latitude: place.lat ?? place.center?.lat,\n    longitude: place.lon ?? place.center?.lon,\n    openingHours: place.tags.opening_hours || null,\n    website: place.tags.website || null\n  }));\n\nreturn [\n  {\n    json: {\n      places\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        0
+      ],
+      "id": "2e27b742-791f-4d22-b4a8-ea444a001cde",
+      "name": "Places DTO"
+    },
+    {
+      "parameters": {
+        "jsCode": "const places = $('Places DTO').item.json.places.map(place => ({\n  id: place.id,\n  name: place.name,\n  category: place.category\n}));\n\nreturn [\n  {\n    json: {\n      places\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        0
+      ],
+      "id": "8fa42d3c-d4ec-40ab-bbe2-9ad4e7eb269c",
+      "name": "Lightweight LLM DTO"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11434/api/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"qwen3.5:4b\",\n  messages: [\n    {\n      role: \"user\",\n      content: `You are an intelligent travel itinerary planner.\n\nCreate a realistic two-day itinerary for ${$('Travel Weather DTO').first().json.city}, ${$('Travel Weather DTO').first().json.country}.\n\nCURRENT WEATHER:\nTemperature: ${$('Travel Weather DTO').first().json.temperature}°C\nHumidity: ${$('Travel Weather DTO').first().json.humidity}%\nWind speed: ${$('Travel Weather DTO').first().json.windSpeed} m/s\n\nVALIDATED PLACES:\n${JSON.stringify($('Validate Selected Places').first().json.selectedPlaces)}\n\nIMPORTANT RULES:\n1. Use ONLY places from VALIDATED PLACES.\n2. Use the exact place IDs provided.\n3. Never invent a place ID.\n4. Each place may appear at most once in the entire itinerary.\n5. Create exactly 2 days.\n6. Create 2–3 activities per day when enough unique places are available.\n7. You do not need to use every validated place.\n8. Never repeat a place to fill an activity slot.\n9. Do not assume weather changes during the day.\n10. Do not invent physical characteristics or facilities.\n11. Consider the provided weather when ordering activities.\n12. Keep reasons short and practical.\n\nReturn ONLY the requested JSON structure.`\n    }\n  ],\n  format: {\n    type: \"object\",\n    properties: {\n      destination: {\n        type: \"string\"\n      },\n      summary: {\n        type: \"string\"\n      },\n      days: {\n        type: \"array\",\n        minItems: 2,\n        maxItems: 2,\n        items: {\n          type: \"object\",\n          properties: {\n            day: {\n              type: \"integer\"\n            },\n            activities: {\n              type: \"array\",\n              minItems: 2,\n              maxItems: 3,\n              items: {\n                type: \"object\",\n        properties: {\n                  time: {\n                    type: \"string\"\n                  },\n id: {\n      type: \"string\"\n    },\n                 \n                  reason: {\n                    type: \"string\"\n                  }\n                },\n                required: [\n                  \"time\",\n                  \"name\",\n                  \"reason\"\n                ]\n              }\n            }\n          },\n          required: [\"id\",\n            \"day\",\n            \"activities\"\n          ]\n        }\n      }\n    },\n    required: [\n      \"destination\",\n      \"summary\",\n      \"days\"\n    ]\n  },\n  think: false,\n  stream: false\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2336,
+        0
+      ],
+      "id": "88146c32-c535-4539-9d44-4c9435ca7d1e",
+      "name": "Qwen Itinerary Planner"
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $json.message?.content;\n\nif (!content) {\n  throw new Error(\"Qwen did not return any content.\");\n}\n\nconst result = JSON.parse(content);\n\nconst selectedPlaces = result.selectedPlaces || [];\n\nconst realPlaces = $('Places DTO').item.json.places || [];\n\nconst validatedPlaces = [];\nconst rejectedPlaces = [];\n\nfor (const selected of selectedPlaces) {\n\n  const realPlace = realPlaces.find(\n    place => place.id === selected.placeId\n  );\n\n  if (!realPlace) {\n    rejectedPlaces.push({\n      placeId: selected.placeId,\n      reason: \"Place ID not found in Places DTO\"\n    });\n\n    continue;\n  }\n\n  validatedPlaces.push({\n    ...realPlace,\n    reason: selected.reason\n  });\n}\n\nreturn [\n  {\n    json: {\n      selectedPlaces: validatedPlaces,\n      selectedCount: validatedPlaces.length,\n      requestedCount: selectedPlaces.length,\n      rejectedPlaces,\n      grounded: rejectedPlaces.length === 0\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2128,
+        0
+      ],
+      "id": "eac27ddb-9374-46a3-8fe5-8b2a3412ccbc",
+      "name": "Validate Selected Places"
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $json.message?.content;\n\nif (!content) {\n  throw new Error(\"Qwen itinerary planner did not return any content.\");\n}\n\nconst itinerary = JSON.parse(content);\n\nconst validatedPlaces =\n  $('Validate Selected Places').first().json.selectedPlaces || [];\n\nconst validIds = new Set(\n  validatedPlaces.map(place => place.id)\n);\n\nconst invalidActivities = [];\nconst duplicateActivities = [];\n\nconst seenIds = new Set();\n\nconst cleanedDays = (itinerary.days || []).map(day => {\n\n  const cleanedActivities = [];\n\n  for (const activity of day.activities || []) {\n\n    // Qwen 2 uses \"id\" because validated places use \"id\"\n    const placeId = activity.id;\n\n    // Missing place ID\n    if (!placeId || placeId === \"N/A\") {\n      invalidActivities.push({\n        day: day.day,\n        placeId: placeId || \"N/A\",\n        reason: \"Missing place ID\"\n      });\n\n      continue;\n    }\n\n    // Place was not selected/validated\n    if (!validIds.has(placeId)) {\n      invalidActivities.push({\n        day: day.day,\n        placeId,\n        reason: \"Place ID was not in validated places\"\n      });\n\n      continue;\n    }\n\n    // Duplicate\n    if (seenIds.has(placeId)) {\n      duplicateActivities.push({\n        day: day.day,\n        placeId,\n        reason: \"Place appeared more than once and was removed\"\n      });\n\n      continue;\n    }\n\n    seenIds.add(placeId);\n\n    cleanedActivities.push({\n      time: activity.time,\n      placeId,\n      reason: activity.reason\n    });\n  }\n\n  return {\n    day: day.day,\n    activities: cleanedActivities\n  };\n});\n\nconst validDayCount =\n  cleanedDays.length === 2;\n\nconst validActivityCounts =\n  validDayCount &&\n  cleanedDays.every(\n    day =>\n      day.activities.length >= 1 &&\n      day.activities.length <= 3\n  );\n\nconst valid =\n  validDayCount &&\n  validActivityCounts;\n\nreturn [\n  {\n    json: {\n      itinerary: {\n        ...itinerary,\n        days: cleanedDays\n      },\n\n      valid,\n\n      invalidActivities,\n\n      duplicateActivities,\n\n      validDayCount,\n\n      validActivityCounts,\n\n      debug: {\n        dayCounts: cleanedDays.map(day => ({\n          day: day.day,\n          activityCount: day.activities.length\n        }))\n      }\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2544,
+        16
+      ],
+      "id": "22e0940c-3e07-45f3-9f9f-c401ebdce039",
+      "name": "Validate Itinerary"
+    },
+    {
+      "parameters": {
+        "jsCode": "const itineraryResult = $json;\n\nif (!itineraryResult.valid) {\n  throw new Error(\"Itinerary validation failed.\");\n}\n\nconst itinerary = itineraryResult.itinerary;\n\nconst weather =\n  $('Travel Weather DTO').first().json;\n\nconst validatedPlaces =\n  $('Validate Selected Places').first().json.selectedPlaces || [];\n\nconst placeMap = new Map(\n  validatedPlaces.map(place => [\n    place.id,\n    place\n  ])\n);\n\nconst days = itinerary.days.map(day => ({\n  day: day.day,\n\n  activities: day.activities.map(activity => {\n\n    const place = placeMap.get(activity.placeId);\n\n    if (!place) {\n      throw new Error(\n        `Place ID ${activity.placeId} was not found in validated places.`\n      );\n    }\n\n    return {\n      time: activity.time,\n\n      placeId: place.id,\n      name: place.name,\n      category: place.category,\n\n      latitude: place.latitude,\n      longitude: place.longitude,\n\n      openingHours: place.openingHours,\n      website: place.website,\n\n      reason: activity.reason\n    };\n  })\n}));\n\nreturn [\n  {\n    json: {\n      success: true,\n\n      destination: {\n        city: weather.city,\n        country: weather.country,\n        timezone: weather.timezone\n      },\n\n      weather: {\n        temperature: weather.temperature,\n        humidity: weather.humidity,\n        windSpeed: weather.windSpeed\n      },\n\n      itinerary: {\n        destination: itinerary.destination,\n        summary: itinerary.summary,\n        days\n      }\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2752,
+        0
+      ],
+      "id": "1a4c7d9c-913e-4b6e-b246-9f0ae6001d99",
+      "name": "Final Travel DTO"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request - geocoding": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather API": {
+      "main": [
+        [
+          {
+            "node": "Travel Weather DTO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Travel Weather DTO": {
+      "main": [
+        [
+          {
+            "node": "Lightweight LLM DTO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - geocoding",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Weather API",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Validate Selected Places",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Places DTO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Places DTO": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lightweight LLM DTO": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qwen Itinerary Planner": {
+      "main": [
+        [
+          {
+            "node": "Validate Itinerary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Selected Places": {
+      "main": [
+        [
+          {
+            "node": "Qwen Itinerary Planner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Itinerary": {
+      "main": [
+        [
+          {
+            "node": "Final Travel DTO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Travel DTO": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "9474da39-19ce-44df-823c-45f9a2098e52",
+  "nodeGroups": [],
+  "id": "CoNJMETuYbw9Qsfo",
+  "tags": []
+}
